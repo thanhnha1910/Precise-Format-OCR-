@@ -152,6 +152,10 @@
             flex-direction: column;
             background: var(--bg-panel);
             position: relative;
+            overflow: hidden;
+            /* Fix: Constrain for scroll */
+            min-height: 0;
+            /* Fix: Flex/Grid scrolling quirk */
         }
 
         .region-toolbar {
@@ -163,6 +167,7 @@
             gap: 1rem;
             font-size: 0.8rem;
             color: var(--text-muted);
+            flex-shrink: 0;
         }
 
         .source-viewer {
@@ -174,11 +179,13 @@
             background-image: radial-gradient(var(--border-dim) 1px, transparent 1px);
             background-size: 20px 20px;
             overflow: auto;
+            position: relative;
         }
 
         #sourceImage {
             max-width: 100%;
-            max-height: 100%;
+            max-height: none;
+            /* Allow scrolling if image is huge */
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
             display: none;
             border-radius: var(--radius-sm);
@@ -227,6 +234,10 @@
             display: flex;
             flex-direction: column;
             background: var(--bg-surface);
+            overflow: hidden;
+            /* Fix: Constrain for scroll */
+            min-height: 0;
+            /* Fix: Flex/Grid scrolling quirk */
         }
 
         .tabs {
@@ -275,10 +286,16 @@
 
         /* --- Visual Renderer Styles --- */
         .visual-doc {
-            max-width: 800px;
-            margin: 0 auto;
+            max-width: 820px;
+            margin: 2rem auto;
+            background: #151515;
+            /* Subtle styling "Page" background */
+            border: 1px solid var(--border-dim);
+            padding: 4rem;
+            border-radius: var(--radius-sm);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             color: var(--text-main);
-            line-height: 1.6;
+            line-height: 1.7;
             font-weight: 300;
         }
 
@@ -292,54 +309,78 @@
 
         .edit-mode .editable-item:hover {
             background: var(--bg-hover);
+            cursor: text;
         }
 
         .edit-mode .editable-item:focus {
             background: var(--bg-panel);
-            box-shadow: 0 0 0 1px var(--status-process);
+            box-shadow: 0 0 0 2px var(--status-process);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            letter-spacing: -0.03em;
+            line-height: 1.2;
         }
 
         h2 {
+            font-size: 1.5rem;
             font-weight: 600;
-            margin-top: 2rem;
+            margin-top: 2.5rem;
             margin-bottom: 1rem;
-            color: var(--accent-primary);
+            color: var(--text-main);
             letter-spacing: -0.02em;
+            border-left: 3px solid var(--accent-primary);
+            /* Avant-Garde Touch */
+            padding-left: 1rem;
         }
 
         p {
-            margin-bottom: 1rem;
-            color: var(--text-main);
+            margin-bottom: 1.25rem;
+            color: #d4d4d4;
+            text-align: justify;
         }
 
         .subtitle {
-            font-size: 0.9em;
+            font-size: 1.1em;
             color: var(--text-muted);
-            margin-top: -0.5rem;
-            margin-bottom: 2rem;
+            margin-top: -1.5rem;
+            margin-bottom: 3rem;
+            font-style: italic;
+            font-family: var(--font-mono);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 1.5rem 0;
+            margin: 2.5rem 0;
             font-size: 0.9rem;
+            border: 1px solid var(--border-dim);
+            background: var(--bg-panel);
         }
 
         th {
             text-align: left;
-            border-bottom: 1px solid var(--border-bright);
-            padding: 0.75rem;
+            border: 1px solid var(--border-bright);
+            padding: 1rem;
             font-family: var(--font-mono);
-            color: var(--text-muted);
+            color: var(--text-main);
             text-transform: uppercase;
             font-size: 0.75rem;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.1em;
+            background: var(--bg-hover);
         }
 
         td {
-            border-bottom: 1px solid var(--border-dim);
-            padding: 0.75rem;
+            border: 1px solid var(--border-dim);
+            padding: 1rem;
+            color: var(--text-muted);
+        }
+
+        tr:hover td {
+            color: var(--text-main);
         }
 
         /* --- Utility & Empty States --- */
@@ -743,7 +784,7 @@
             // Ensure we have the latest edits if someone clicks download while in edit mode
             if (isEditMode) saveEdits();
 
-            const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell } = docx;
+            const { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableRow, TableCell, WidthType, BorderStyle } = docx;
             const data = currentResult.structuredData;
 
             const children = [];
@@ -802,7 +843,21 @@
                             });
                         }
 
-                        children.push(new Table({ rows: rows }));
+                        children.push(new Table({
+                            rows: rows,
+                            width: {
+                                size: 100,
+                                type: WidthType.PERCENTAGE,
+                            },
+                            borders: {
+                                top: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                                bottom: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                                left: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                                right: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                                insideHorizontal: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                                insideVertical: { style: BorderStyle.SINGLE, size: 1, color: "000000" },
+                            }
+                        }));
                         children.push(new Paragraph({ text: "" })); // Spacer
                     }
                 }
