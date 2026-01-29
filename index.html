@@ -651,23 +651,27 @@
         }
 
         function renderVisual() {
-            const data = currentResult.structuredData || {};
-            let html = '<div class="visual-doc">';
+            // V5: Use Markdown directly instead of JSON sections
+            const markdown = currentResult.formattedMarkdown || currentResult.rawText || '';
 
-            if (data.documentTitle) {
-                // data-field for direct mapping is tricky with title as it's root level
-                // We'll handle root level specifically
-                html += `<h1 class="editable-item" data-root-field="documentTitle">${data.documentTitle}</h1>`;
+            // Configure marked for better table rendering
+            marked.setOptions({
+                gfm: true,        // GitHub Flavored Markdown (tables support)
+                breaks: true,     // Treat single newlines as <br>
+                headerIds: false  // Don't add IDs to headers
+            });
+
+            // Parse Markdown to HTML
+            let htmlContent = '';
+            try {
+                htmlContent = marked.parse(markdown);
+            } catch (e) {
+                console.error('Markdown parse error:', e);
+                htmlContent = `<pre>${markdown}</pre>`;
             }
 
-            if (data.sections) {
-                data.sections.forEach((section, index) => {
-                    html += renderSection(section, index);
-                });
-            }
-
-            html += '</div>';
-            resultContent.innerHTML = html;
+            // Wrap in visual-doc container
+            resultContent.innerHTML = `<div class="visual-doc">${htmlContent}</div>`;
         }
 
         function renderSection(section, index) {
